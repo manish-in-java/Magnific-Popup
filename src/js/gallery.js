@@ -53,7 +53,7 @@ $.magnificPopup.registerModule('gallery', {
 				}
 
 				_document.on('keydown'+ns, function(e) {
-				  if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
+				  if (e.altKey || e.ctrlKey || e.shiftKey) {
 				    // If ALT, CTRL or SHIFT key is pressed, do not react to key
 				    // presses since it may break browser back button navigation.
 				    return true;

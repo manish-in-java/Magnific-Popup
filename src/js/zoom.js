@@ -180,4 +180,3 @@ $.magnificPopup.registerModule('zoom', {
 
 	}
 });
-

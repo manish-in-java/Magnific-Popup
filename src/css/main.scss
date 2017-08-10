@@ -541,3 +541,42 @@ button {
   }
 }
 
+@-webkit-keyframes magnific-fade-in {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+
+@-moz-keyframes magnific-fade-in {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+
+@-o-keyframes magnific-fade-in {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+
+@keyframes magnific-fade-in {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+
+.mfp-gallery.mfp-ready .mfp-figure {
+    -webkit-animation-name: magnific-fade-in;
+    -moz-animation-name: magnific-fade-in;
+    -o-animation-name: magnific-fade-in;
+    animation-name: magnific-fade-in;
+    -webkit-animation-duration: 1.5s;
+    -moz-animation-duration: 1.5s;
+    -ms-animation-duration: 1.5s;
+    -o-animation-duration: 1.5s;
+    animation-duration: 1.5s;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    -ms-animation-fill-mode: both;
+    -o-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+}
