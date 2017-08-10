@@ -20,6 +20,7 @@ $.magnificPopup.registerModule('gallery', {
 		enabled: false,
 		arrowMarkup: '<button title="%title%" type="button" class="mfp-arrow mfp-arrow-%dir%"></button>',
 		preload: [0,2],
+		delayPreload: false,
 		navigateByImgClick: true,
 		arrows: true,
 
@@ -52,6 +53,20 @@ $.magnificPopup.registerModule('gallery', {
 				}
 
 				_document.on('keydown'+ns, function(e) {
+				  if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
+				    // If ALT, CTRL or SHIFT key is pressed, do not react to key
+				    // presses since it may break browser back button navigation.
+				    return true;
+				  }
+
+				  if(document.activeElement
+				      && (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT')) {
+				    // Prevent keyboard shortcuts for galleries when the focus is
+				    // on an HTML element that supports cursor movement using
+				    // arrow keys.
+            return true;
+          }
+
 					if (e.keyCode === 37) {
 						mfp.prev();
 					} else if (e.keyCode === 39) {
@@ -84,19 +99,50 @@ $.magnificPopup.registerModule('gallery', {
 						mfp.next();
 					});
 
+          mfp.container.touch = {};
+
+          document.ontouchstart = function(e) {
+            // Store start position.
+            mfp.container.touch.x = e.touches[0].clientX;
+          }
+
+          document.ontouchmove = function(e) {
+            // Only deal with one finger
+            if (e.touches.length == 1 && !mfp.container.is(":animated")) {
+              // Get delta
+              var deltaX = mfp.container.touch.x - e.touches[0].clientX;
+
+              mfp.container.touch.x = e.touches[0].clientX;
+
+              if (deltaX > 30) mfp.next();
+              else if (deltaX < -30) mfp.prev();
+            }
+          }
+
 					mfp.container.append(arrowLeft.add(arrowRight));
 				}
 			});
 
 			_mfpOn(CHANGE_EVENT+ns, function() {
-				if(mfp._preloadTimeout) clearTimeout(mfp._preloadTimeout);
+			  if (!gSt.delayPreload) {
+			    // If the next image(s) need(s) to be preloaded without delay,
+			    // start preloading the requested number of images.
+				  if(mfp._preloadTimeout) clearTimeout(mfp._preloadTimeout);
 
-				mfp._preloadTimeout = setTimeout(function() {
-					mfp.preloadNearbyImages();
-					mfp._preloadTimeout = null;
-				}, 16);
+				  mfp._preloadTimeout = setTimeout(function() {
+					  mfp.preloadNearbyImages();
+					  mfp._preloadTimeout = null;
+				  }, 16);
+        }
 			});
 
+      _mfpOn('ImageLoadComplete', function() {
+        if (gSt.delayPreload) {
+          // If the next image(s) need(s) to be preloaded only after an image
+          // has loaded, start preloading the requested number of images.
+          mfp.preloadNearbyImages();
+        }
+      });
 
 			_mfpOn(CLOSE_EVENT+ns, function() {
 				_document.off(ns);

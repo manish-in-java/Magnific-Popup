@@ -28,7 +28,7 @@ var CLOSE_EVENT = 'Close',
 /*jshint -W079 */
 var mfp, // As we have only one instance of MagnificPopup object, we define it locally to not to use 'this'
 	MagnificPopup = function(){},
-	_isJQ = !!(window.jQuery),
+	_isJQ = !!(window.jQuery) || !!($.fn.jquery) || typeof jQuery !== 'undefined',
 	_prevStatus,
 	_window = $(window),
 	_document,
@@ -72,7 +72,7 @@ var _mfpOn = function(name, f) {
 	},
 	_getCloseBtn = function(type) {
 		if(type !== _currPopupType || !mfp.currTemplate.closeBtn) {
-			mfp.currTemplate.closeBtn = $( mfp.st.closeMarkup.replace('%title%', mfp.st.tClose ) );
+			mfp.currTemplate.closeBtn = $( mfp.st.closeMarkup.replace(%title%/g, mfp.st.tClose ) );
 			_currPopupType = type;
 		}
 		return mfp.currTemplate.closeBtn;
@@ -433,11 +433,20 @@ MagnificPopup.prototype = {
 		// remove scrollbar, add margin e.t.c
 		$('html').css(windowStyles);
 
+    // Add aria-hidden attributes to page elements so that they are not
+    // accessible for as long as the popup is on.
+    mfp._ariaHiddenElements = $('body').children();
+
+    $(mfp._ariaHiddenElements).each(function() {
+      $(this).attr('data-aria-hidden', $(this).attr('aria-hidden'));
+      $(this).attr('aria-hidden', 'true');
+    });
+
 		// add everything to DOM
 		mfp.bgOverlay.add(mfp.wrap).prependTo( mfp.st.prependTo || $(document.body) );
 
 		// Save last focused element
-		mfp._lastFocusedEl = document.activeElement;
+		mfp._lastFocusedEl = document.activeElement ? document.activeElement : document.body;
 
 		// Wait for next cycle to allow CSS transition
 		setTimeout(function() {
@@ -451,8 +460,14 @@ MagnificPopup.prototype = {
 			}
 
 			// Trap the focus in popup
-			_document.on('focusin' + EVENT_NS, mfp._onFocusIn);
-
+			if(!('onfocusin' in window) && document.addEventListener) {
+			  // In browsers which do not support focusin (for example, Firefox),
+			  // but have addEventListener, fall back to focus with capture.
+			  document.addEventListener('focus', mfp._onFocusIn, true);
+			}
+			else {
+			  _document.on('focusin' + EVENT_NS, mfp._onFocusIn);
+      }
 		}, 16);
 
     // Force the popup to full screen mode, if supported.
@@ -474,15 +489,16 @@ MagnificPopup.prototype = {
 		if(!mfp.isOpen) return;
 		_mfpTrigger(BEFORE_CLOSE_EVENT);
 
-		mfp.isOpen = false;
 		// for CSS3 animation
 		if(mfp.st.removalDelay && !mfp.isLowIE && mfp.supportsTransition )  {
 			mfp._addClassToMFP(REMOVING_CLASS);
 			setTimeout(function() {
 				mfp._close();
+		    mfp.isOpen = false;
 			}, mfp.st.removalDelay);
 		} else {
 			mfp._close();
+		  mfp.isOpen = false;
 		}
 	},
 
@@ -517,10 +533,30 @@ MagnificPopup.prototype = {
 		_document.off('keyup' + EVENT_NS + ' focusin' + EVENT_NS);
 		mfp.ev.off(EVENT_NS);
 
+    if(!('onfocusin' in window) && document.addEventListener) {
+      // In browsers which do not support focusin (for example, Firefox),
+      // but have addEventListener, remove the event listener for capturing
+      // focus.
+      document.removeEventListener('focus', mfp._onFocusIn, true);
+    }
+
 		// clean up DOM elements that aren't removed
 		mfp.wrap.attr('class', 'mfp-wrap').removeAttr('style');
 		mfp.bgOverlay.attr('class', 'mfp-bg');
 		mfp.container.attr('class', 'mfp-container');
+
+    // Remove aria-hidden attributes from page elements
+    $(mfp._ariaHiddenElements).each(function() {
+      if(typeof $(this).attr('data-aria-hidden') === 'undefined') {
+        $(this).removeAttr('aria-hidden');
+      }
+      else {
+        $(this).attr('aria-hidden', $(this).attr('data-aria-hidden'));
+      }
+
+      $(this).removeAttr('data-aria-hidden');
+    });
+    mfp._ariaHiddenElements = [];
 
 		// remove close button from target element
 		if(mfp.st.showCloseBtn &&
@@ -555,6 +591,15 @@ MagnificPopup.prototype = {
 		// Fixes #84: popup incorrectly positioned with position:relative on body
 		if(!mfp.fixedContentPos) {
 			mfp.wrap.css('height', mfp.wH);
+
+			// After rotating, the popup is not center aligned on iOS.
+      if(mfp.isIOS) {
+        setTimeout(function() {
+          $('html, body').animate({
+            scrollTop: mfp.wrap.offset().top
+          }, 100);
+        }, 250);
+      }
 		}
 
 		_mfpTrigger('Resize');
@@ -810,12 +855,12 @@ MagnificPopup.prototype = {
 		} else {
 
 			// We close the popup if click is on close button or on preloader. Or if there is no content.
-			if(!mfp.content || $(target).hasClass('mfp-close') || (mfp.preloader && target === mfp.preloader[0]) ) {
+			if(!mfp.content || $(target).closest('mfp-close').length || (mfp.preloader && target === mfp.preloader[0]) ) {
 				return true;
 			}
 
 			// if click is outside the content
-			if(  (target !== mfp.content[0] && !$.contains(mfp.content[0], target))  ) {
+			if(  (target !== mfp.content[0] && !$.contains(mfp.contentContainer[0], target))  ) {
 				if(closeOnBg) {
 					// last check, if the clicked element is in DOM, (in case it's removed onclick)
 					if( $.contains(document, target) ) {
@@ -841,11 +886,20 @@ MagnificPopup.prototype = {
 		return (  (mfp.isIE7 ? _document.height() : document.body.scrollHeight) > (winHeight || _window.height()) );
 	},
 	_setFocus: function() {
-		(mfp.st.focus ? mfp.content.find(mfp.st.focus).eq(0) : mfp.wrap).focus();
+	  if(mfp.st.focus) {
+	    var el = mfp.content.find(mfp.st.focus).eq(0);
+	    if(el.length) {
+	      el.focus();
+
+	      return;
+	    }
+	  }
+
+		mfp.wrap.focus();
 	},
 	_onFocusIn: function(e) {
-		if( e.target !== mfp.wrap[0] && !$.contains(mfp.wrap[0], e.target) ) {
-			mfp._setFocus();
+		if( e.target !== document  && e.target !== mfp.wrap[0] && !$.contains(mfp.wrap[0], e.target) ) {
+			mfp.wrap.focus();
 			return false;
 		}
 	},
@@ -979,7 +1033,7 @@ $.magnificPopup = {
 
 		overflowY: 'auto',
 
-		closeMarkup: '<button title="%title%" type="button" class="mfp-close">&#215;</button>',
+		closeMarkup: '<button title="%title%" type="button" class="mfp-close" aria-label="%title%"><span aria-hidden="true">&times;</span></button>',
 
 		tClose: 'Close (Esc)',
 
