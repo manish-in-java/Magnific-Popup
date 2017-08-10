@@ -1,7 +1,7 @@
 /**
- * 
+ *
  * Magnific Popup Core JS file
- * 
+ *
  */
 
 
@@ -23,7 +23,7 @@ var CLOSE_EVENT = 'Close',
 
 
 /**
- * Private vars 
+ * Private vars
  */
 /*jshint -W079 */
 var mfp, // As we have only one instance of MagnificPopup object, we define it locally to not to use 'this'
@@ -92,15 +92,15 @@ var _mfpOn = function(name, f) {
 			v = ['ms','O','Moz','Webkit']; // 'v' for vendor
 
 		if( s['transition'] !== undefined ) {
-			return true; 
+			return true;
 		}
-			
+
 		while( v.length ) {
 			if( v.pop() + 'Transition' in s ) {
 				return true;
 			}
 		}
-				
+
 		return false;
 	};
 
@@ -114,7 +114,7 @@ MagnificPopup.prototype = {
 	constructor: MagnificPopup,
 
 	/**
-	 * Initializes Magnific Popup plugin. 
+	 * Initializes Magnific Popup plugin.
 	 * This function is triggered only once when $.fn.magnificPopup or $.magnificPopup is executed
 	 */
 	init: function() {
@@ -132,6 +132,99 @@ MagnificPopup.prototype = {
 		mfp.popupsCache = {};
 	},
 
+  /*
+   * Exits full screen mode for the popup.
+   */
+  _exitFullScreen: function(e) {
+    if (mfp.isFullScreen) {
+      var element = mfp.wrap[0];
+
+      // Exit full screen mode based on the browser.
+      if (element.cancelFullscreen) element.cancelFullscreen();
+      else if (element.cancelFullScreen) element.cancelFullScreen();
+      else if (element.mozCancelFullscreen) element.mozCancelFullscreen();
+      else if (element.mozCancelFullScreen) element.mozCancelFullScreen();
+      else if (element.msCancelFullscreen) element.msCancelFullscreen();
+      else if (element.msCancelFullScreen) element.msCancelFullScreen();
+      else if (element.webkitCancelFullscreen) element.webkitCancelFullscreen();
+      else if (element.webkitCancelFullScreen) element.webkitCancelFullScreen();
+
+      document.removeEventListener("fullscreenchange", mfp._exitFullScreen),
+      document.removeEventListener("mozfullscreenchange", mfp._exitFullScreen),
+      document.removeEventListener("msfullscreenchange", mfp._exitFullScreen),
+      document.removeEventListener("webkitfullscreenchange", mfp._exitFullScreen),
+
+      mfp.close(),
+      mfp.isFullScreen = false;
+    } else {
+      mfp.isFullScreen = true;
+    }
+  },
+
+  /*
+   * Gets whether full screen mode is supported by the browser.
+   */
+  _isFullScreenPossible: function() {
+    var element = mfp.wrap[0];
+
+    return mfp._isFunction(element.requestFullscreen)
+            || mfp._isFunction(element.requestFullScreen)
+            || mfp._isFunction(element.mozRequestFullscreen)
+            || mfp._isFunction(element.mozRequestFullScreen)
+            || mfp._isFunction(element.msRequestFullscreen)
+            || mfp._isFunction(element.msRequestFullScreen)
+            || mfp._isFunction(element.webkitRequestFullscreen);
+  },
+
+  /*
+   * Gets whether an object is a JavaScript function.
+   */
+   _isFunction: function(object) {
+     return typeof(object) === "function";
+   },
+
+   /*
+    * Forces the popup to open in full screen mode, if supported by the
+    * browser.
+    */
+  _startFullScreen: function() {
+    var element = mfp.wrap[0];
+
+    // Start full screen mode based on the browser.
+    if (element.requestFullscreen) {
+      element.requestFullscreen();
+      document.addEventListener("fullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.requestFullScreen) {
+      element.requestFullScreen();
+      document.addEventListener("fullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.mozRequestFullscreen) {
+      element.mozRequestFullscreen();
+      document.addEventListener("mozfullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.mozRequestFullScreen) {
+      element.mozRequestFullScreen();
+      document.addEventListener("mozfullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.msRequestFullscreen) {
+      element.msRequestFullscreen();
+      document.addEventListener("msfullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.msRequestFullScreen) {
+      element.msRequestFullScreen();
+      document.addEventListener("msfullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.webkitRequestFullscreen) {
+      element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      document.addEventListener("webkitfullscreenchange", mfp._exitFullScreen);
+    }
+    else if (element.webkitRequestFullScreen) {
+      element.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+      document.addEventListener("webkitfullscreenchange", mfp._exitFullScreen);
+    }
+  },
+
 	/**
 	 * Opens popup
 	 * @param  data [description]
@@ -140,7 +233,7 @@ MagnificPopup.prototype = {
 
 		var i;
 
-		if(data.isObj === false) { 
+		if(data.isObj === false) {
 			// convert jQuery collection to array to avoid conflicts later
 			mfp.items = data.items.toArray();
 
@@ -167,8 +260,8 @@ MagnificPopup.prototype = {
 			mfp.updateItemHTML();
 			return;
 		}
-		
-		mfp.types = []; 
+
+		mfp.types = [];
 		_wrapClasses = '';
 		if(data.mainEl && data.mainEl.length) {
 			mfp.ev = data.mainEl.eq(0);
@@ -187,7 +280,7 @@ MagnificPopup.prototype = {
 
 
 
-		mfp.st = $.extend(true, {}, $.magnificPopup.defaults, data ); 
+		mfp.st = $.extend(true, {}, $.magnificPopup.defaults, data );
 		mfp.fixedContentPos = mfp.st.fixedContentPos === 'auto' ? !mfp.probablyMobile : mfp.st.fixedContentPos;
 
 		if(mfp.st.modal) {
@@ -196,7 +289,7 @@ MagnificPopup.prototype = {
 			mfp.st.showCloseBtn = false;
 			mfp.st.enableEscapeKey = false;
 		}
-		
+
 
 		// Building markup
 		// main containers are created only once
@@ -248,28 +341,33 @@ MagnificPopup.prototype = {
 			_wrapClasses += ' mfp-align-top';
 		}
 
-	
 
-		if(mfp.fixedContentPos) {
-			mfp.wrap.css({
-				overflow: mfp.st.overflowY,
-				overflowX: 'hidden',
-				overflowY: mfp.st.overflowY
-			});
-		} else {
-			mfp.wrap.css({ 
-				top: _window.scrollTop(),
-				position: 'absolute'
-			});
-		}
-		if( mfp.st.fixedBgPos === false || (mfp.st.fixedBgPos === 'auto' && !mfp.fixedContentPos) ) {
-			mfp.bgOverlay.css({
-				height: _document.height(),
-				position: 'absolute'
-			});
-		}
 
-		
+    // Determine if the popup needs to be converted to full screen.
+    mfp.st.fullScreen = mfp.st.fullScreen && mfp._isFullScreenPossible();
+
+    if(!mfp.st.fullScreen) {
+      if(mfp.fixedContentPos) {
+        mfp.wrap.css({
+          overflow: mfp.st.overflowY,
+          overflowX: 'hidden',
+          overflowY: mfp.st.overflowY
+        });
+      } else {
+        mfp.wrap.css({
+          top: _window.scrollTop(),
+          position: 'absolute'
+        });
+      }
+
+      if( mfp.st.fixedBgPos === false || (mfp.st.fixedBgPos === 'auto' && !mfp.fixedContentPos) ) {
+        mfp.bgOverlay.css({
+          height: _document.height(),
+          position: 'absolute'
+        });
+      }
+    }
+
 
 		if(mfp.st.enableEscapeKey) {
 			// Close on ESC key
@@ -288,7 +386,7 @@ MagnificPopup.prototype = {
 		if(!mfp.st.closeOnContentClick) {
 			_wrapClasses += ' mfp-auto-cursor';
 		}
-		
+
 		if(_wrapClasses)
 			mfp.wrap.addClass(_wrapClasses);
 
@@ -296,7 +394,7 @@ MagnificPopup.prototype = {
 		// this triggers recalculation of layout, so we get it once to not to trigger twice
 		var windowHeight = mfp.wH = _window.height();
 
-		
+
 		var windowStyles = {};
 
 		if( mfp.fixedContentPos ) {
@@ -317,8 +415,8 @@ MagnificPopup.prototype = {
 			}
 		}
 
-		
-		
+
+
 		var classesToadd = mfp.st.mainClass;
 		if(mfp.isIE7) {
 			classesToadd += ' mfp-ie7';
@@ -334,16 +432,16 @@ MagnificPopup.prototype = {
 
 		// remove scrollbar, add margin e.t.c
 		$('html').css(windowStyles);
-		
+
 		// add everything to DOM
 		mfp.bgOverlay.add(mfp.wrap).prependTo( mfp.st.prependTo || $(document.body) );
 
 		// Save last focused element
 		mfp._lastFocusedEl = document.activeElement;
-		
+
 		// Wait for next cycle to allow CSS transition
 		setTimeout(function() {
-			
+
 			if(mfp.content) {
 				mfp._addClassToMFP(READY_CLASS);
 				mfp._setFocus();
@@ -351,11 +449,16 @@ MagnificPopup.prototype = {
 				// if content is not defined (not loaded e.t.c) we add class only for BG
 				mfp.bgOverlay.addClass(READY_CLASS);
 			}
-			
+
 			// Trap the focus in popup
 			_document.on('focusin' + EVENT_NS, mfp._onFocusIn);
 
 		}, 16);
+
+    // Force the popup to full screen mode, if supported.
+    if (mfp.st.fullScreen) {
+      mfp._startFullScreen();
+    }
 
 		mfp.isOpen = true;
 		mfp.updateSize(windowHeight);
@@ -410,7 +513,7 @@ MagnificPopup.prototype = {
 			}
 			$('html').css(windowStyles);
 		}
-		
+
 		_document.off('keyup' + EVENT_NS + ' focusin' + EVENT_NS);
 		mfp.ev.off(EVENT_NS);
 
@@ -430,14 +533,14 @@ MagnificPopup.prototype = {
 		if(mfp.st.autoFocusLast && mfp._lastFocusedEl) {
 			$(mfp._lastFocusedEl).focus(); // put tab focus back
 		}
-		mfp.currItem = null;	
+		mfp.currItem = null;
 		mfp.content = null;
 		mfp.currTemplate = null;
 		mfp.prevHeight = 0;
 
 		_mfpTrigger(AFTER_CLOSE_EVENT);
 	},
-	
+
 	updateSize: function(winHeight) {
 
 		if(mfp.isIOS) {
@@ -695,7 +798,7 @@ MagnificPopup.prototype = {
 	// "target" is an element that was clicked
 	_checkIfClose: function(target) {
 
-		if($(target).closest('.' + PREVENT_CLOSE_CLASS).length) {
+		if($(target).hasClass(PREVENT_CLOSE_CLASS)) {
 			return;
 		}
 
@@ -707,7 +810,7 @@ MagnificPopup.prototype = {
 		} else {
 
 			// We close the popup if click is on close button or on preloader. Or if there is no content.
-			if(!mfp.content || $(target).closest('.mfp-close').length || (mfp.preloader && target === mfp.preloader[0]) ) {
+			if(!mfp.content || $(target).hasClass('mfp-close') || (mfp.preloader && target === mfp.preloader[0]) ) {
 				return true;
 			}
 
@@ -882,8 +985,9 @@ $.magnificPopup = {
 
 		tLoading: 'Loading...',
 
-		autoFocusLast: true
+		autoFocusLast: true,
 
+    fullScreen: false
 	}
 };
 
