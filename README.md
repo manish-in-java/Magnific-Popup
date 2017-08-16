@@ -1,17 +1,23 @@
 # Magnific Popup Repository
 
 This is a fork of the [Magnific Popup](https://github.com/dimsemenov/Magnific-Popup)
-library developed by [Dmitry Semenov](https://github.com/dimsemenov).
-It contains the following additions to the last released version of the
-original library:
+pluginfor jQuery developed by [Dmitry Semenov](https://github.com/dimsemenov). This
+fork was started to address bugs in the plugin and to make additions after development
+on the original plugin stopped after February 2016.
+
+This fork contains the following additions to the last version of the original plugin
+released in February 2016:
 
 1. *Full screen popup mode*: passing `fullScreen : true` to the
 plugin opens the popup in full screen mode if the browser supports it.
 1. *Touch support for galleries*: swiping left and right when in
 the gallery mode on a touch-enabled device functions as click of
-previous and next buttons, respectively.
+previous and next buttons, respectively, allowing moving back and forth between
+gallery items.
 1. *Support for `youtu.be` style links for iframes*: the iframe addon
 supports links such as `https://youtu.be/tPEE9ZwTmy0`.
+1. *`fade-in` animation for gallery slides*: gallery slides now fade in when they
+appear.
 
 ----
 
