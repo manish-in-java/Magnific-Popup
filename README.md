@@ -1,7 +1,7 @@
 # Magnific Popup Repository
 
 This is a fork of the [Magnific Popup](https://github.com/dimsemenov/Magnific-Popup)
-pluginfor jQuery developed by [Dmitry Semenov](https://github.com/dimsemenov). This
+plugin for jQuery developed by [Dmitry Semenov](https://github.com/dimsemenov). This
 fork was started to address bugs in the plugin and to make additions after development
 on the original plugin stopped after February 2016.
 
